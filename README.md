@@ -2,6 +2,8 @@
 
 Estimates how long you actively worked on a project by analyzing git commit history. Groups commit days into "sessions" separated by a configurable gap threshold, then tallies active days while ignoring dead time.
 
+![CLI Screenshot](./cli-screenshot.png)
+
 ## Installation
 
 ```bash
