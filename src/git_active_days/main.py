@@ -191,7 +191,6 @@ def print_report(sessions, gap_days, diff_stats, tag_dates, show_dates=False):
     total_added = sum(s["added"] for s in session_stats)
     total_deleted = sum(s["deleted"] for s in session_stats)
 
-    # ── Summary panel ──────────────────────────────────────────────────────
     summary = (
         f"[bold]Project span[/]   {project_start}  →  {project_end}  "
         f"[dim]({calendar_days} calendar days)[/dim]\n"
@@ -202,7 +201,6 @@ def print_report(sessions, gap_days, diff_stats, tag_dates, show_dates=False):
         f"[red]-{fmt_lines(total_dels)}[/red]  "
         f"[dim]across {total_commits} commit(s)[/dim]"
     )
-    console.print(Panel(summary, title="[bold cyan]Git Active Days[/bold cyan]", expand=False))
 
     # ── Session table ───────────────────────────────────────────────────────
     # Column order: # | Idle days | Start | End | Cal days | Active days | Activity | Commits | +files | -files | +lines | -lines | Milestones  # noqa: E501
@@ -264,6 +262,9 @@ def print_report(sessions, gap_days, diff_stats, tag_dates, show_dates=False):
         "",
     )
 
+    # ── Summary panel (printed after table is built so we can match its width) ─
+    table_width = console.measure(table).maximum
+    console.print(Panel(summary, title="[bold cyan]Git Active Days[/bold cyan]", width=table_width))
     console.print(table)
 
     # ── Per-session date chips (opt-in) ────────────────────────────────────
