@@ -33,6 +33,16 @@ git-active-days --all-branches
 git-active-days --dates
 ```
 
+## Shell completion
+
+After installing, enable autocomplete for your shell:
+
+```
+git-active-days --install-completion
+```
+
+Then restart your shell (or source your rc file) for it to take effect.
+
 ## How it works
 
 Commit dates are collected from `git log` and grouped into sessions. A new session starts when the gap between two consecutive active days exceeds the threshold (`--gap`, default 7 days). Each session reports its date range, active days, commit count, line churn, and any tags that fall within it.

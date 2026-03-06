@@ -1,10 +1,11 @@
-import argparse
 import contextlib
 import subprocess
 import sys
 from collections import defaultdict
 from datetime import date
+from typing import Annotated
 
+import typer
 from rich import box
 from rich.columns import Columns
 from rich.console import Console
@@ -13,6 +14,7 @@ from rich.table import Table
 from rich.text import Text
 
 console = Console()
+app = typer.Typer(help="Estimate active working days from git commit history.", add_completion=True)
 
 
 def get_commit_dates(branch=None, author=None, all_branches=False, cwd=None):
@@ -274,53 +276,45 @@ def print_report(sessions, gap_days, diff_stats, tag_dates, show_dates=False):
     console.print()
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Estimate active working days from git commit history.",
-        epilog=(
-            "Examples:\n"
-            "  git-active-days                          # run in current repo\n"
-            "  git-active-days /path/to/repo            # specify repo path\n"
-            "  git-active-days --gap 14                 # 14-day session gap\n"
-            "  git-active-days --branch main            # single branch\n"
-            "  git-active-days --author 'Habib'         # filter by author\n"
-            "  git-active-days --all-branches           # all branches\n"
-            "  git-active-days --dates                  # show active dates\n"
+@app.command()
+def main(
+    path: Annotated[str | None, typer.Argument(help="Path to git repository (default: current directory)")] = None,
+    gap: Annotated[int, typer.Option(help="Days of inactivity that signal a new session")] = 7,
+    branch: Annotated[str | None, typer.Option(help="Branch to analyze (default: current branch)")] = None,
+    author: Annotated[str | None, typer.Option(help="Filter commits by author name or email")] = None,
+    all_branches: Annotated[
+        bool,
+        typer.Option(
+            "--all-branches",
+            help="Analyze commits across all branches (combine with --author on shared repos to avoid inflated counts)",
         ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument("--gap", type=int, default=7, help="Days of inactivity that signal a new session (default: 7)")
-    parser.add_argument("--branch", type=str, default=None, help="Branch to analyze (default: current branch)")
-    parser.add_argument("--author", type=str, default=None, help="Filter commits by author name or email")
-    parser.add_argument("--all-branches", action="store_true", help="Analyze commits across all branches (combine with --author on shared repos to avoid inflated counts)")
-    parser.add_argument("--dates", action="store_true", help="Print individual active dates for each session")
-    parser.add_argument("path", nargs="?", default=None, help="Path to git repository (default: current directory)")
-    args = parser.parse_args()
+    ] = False,
+    dates: Annotated[bool, typer.Option("--dates", help="Print individual active dates for each session")] = False,
+):
+    cwd = path or None
 
-    cwd = args.path or None
-
-    dates = get_commit_dates(
-        branch=args.branch,
-        author=args.author,
-        all_branches=args.all_branches,
+    commit_dates = get_commit_dates(
+        branch=branch,
+        author=author,
+        all_branches=all_branches,
         cwd=cwd,
     )
 
-    if not dates:
+    if not commit_dates:
         console.print("[yellow]No commits found matching your filters.[/yellow]")
-        sys.exit(0)
+        raise typer.Exit(0)
 
     diff_stats = get_diff_stats(
-        branch=args.branch,
-        author=args.author,
-        all_branches=args.all_branches,
+        branch=branch,
+        author=author,
+        all_branches=all_branches,
         cwd=cwd,
     )
 
     tag_dates = get_tag_dates(cwd=cwd)
-    sessions = group_into_sessions(dates, gap_days=args.gap)
-    print_report(sessions, gap_days=args.gap, diff_stats=diff_stats, tag_dates=tag_dates, show_dates=args.dates)
+    sessions = group_into_sessions(commit_dates, gap_days=gap)
+    print_report(sessions, gap_days=gap, diff_stats=diff_stats, tag_dates=tag_dates, show_dates=dates)
 
 
 if __name__ == "__main__":
-    main()
+    app()

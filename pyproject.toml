@@ -8,7 +8,10 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Habib Affinnih", email = "hi@haffinnih.dev" }]
 
-dependencies = ["rich>=10.0"]
+dependencies = [
+    "rich>=14.3.3",
+    "typer>=0.24.1",
+]
 
 [dependency-groups]
 dev = ["ruff>=0.15.5"]
@@ -17,7 +20,7 @@ dev = ["ruff>=0.15.5"]
 Repository = "https://github.com/haffinnih/git-active-days"
 
 [project.scripts]
-git-active-days = "git_active_days.main:main"
+git-active-days = "git_active_days.main:app"
 
 [build-system]
 requires = ["uv_build>=0.10,<0.11"]
